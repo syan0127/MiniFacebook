@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  	<script type="text/javascript">
+  	
+  	var currentUser;
+  	var currentUserId;
+  		
+  	var loadPage = function() {
+  		console.log('loading');
+  		$.getJSON('/getprofile', function(data) {
+  			console.log(data);
+  			document.getElementById("fname").value = data.firstname;  	
+  			document.getElementById("lname").value = data.lastname;
+  			document.getElementById("dob").value = data.birthday.substring(0, data.birthday.indexOf('T'));
+  			document.getElementById("email").value = data.email;
+			document.getElementById("aff").value = data.affiliation;
+			document.getElementById("ints").value = data.interests;
+			
+  		});
+  		
+  	};
+  	function update() {
+  		$.ajax({
+			type: "POST",
+		   	url: '/updateprofile',
+		   	async: false,
+		   	data: {	fname: document.getElementById("fname").value,
+  					lname: document.getElementById("lname").value,
+  					email: document.getElementById("email").value,
+  					aff: document.getElementById("aff").value,
+  					dob: document.getElementById("dob").value,	
+  					ints: document.getElementById("ints").value,	}, 
+		   	success: function(data) { 
+		   		console.log('data: ' + data);
+		   		if(data == 'error') {
+  					alert("Error updating profile");
+  				} else if(data == 'empty') {
+  					alert("Empty fields");
+  				} else {
+  					console.log('updated');
+  					alert("Update Successful!");
+  					//AddStatusSendNotification();					
+  				}
+		   }	   
+		});	
+  	};
+  	
+  	var sendNotifications = function(updatedStatus) {
+    	var friendIdArr = [];
+    	var req = $.getJSON('/friends/:' + currentUserId, function(data) {
+  			for (var i = 0; i < data.Items.length; i++) {
+  				if (data.Items[i].status == 3) {
+  					friendIdArr.push(data.Items[i].friendId);
+  				}
+  			}
+  		});
+  		
+  		req.success(function(response){			
+			
+			$.post("/sendNotifications",
+    		 	{friendIdArr: friendIdArr, updatedStatus: updatedStatus},
+    		 	function (result) {
+    		 		if (result === 'Success') {
+    		 			console.log("Updated noti for everyone!");
+    		 		}
+    		 		else {
+    		 			alert(result);
+    		 		}
+    		 	});			
+		});    	
+    }
+  	
+  	var setCurrUser = function() {
+    	var req = $.getJSON('/curruser', function(data) {
+        		currentUser = data.username;
+        		currentUserId = data.userId;
+        })
+        
+        req.success(function(response){
+			console.log("currentUserId set");
+		});
+    }
+
+  	window.onload = function() { 	
+  		setCurrUser();
+  		loadPage();
+  	}
+  	</script>
+  	
+	<title>Edit</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<style type="text/css">
+	body {
+	  width: 100wh;
+	  height: 90vh;
+	  color: #fff;
+	  background-size: 110% 115%;
+	  background-image: linear-gradient(to left bottom, #4c87fc, #5076fd, #5e62fb, #7148f4, #861de9);
+	}
+
+    .btn-custom {
+      background-color: Transparent;
+      border-color: #FFFFFF;
+      color:#FEFEFE;
+      font-weight: 600;
+      border-radius: 20px;
+      width: 400px;
+    }
+    .btn-add {
+      background-color: Transparent;
+      border-color: #FFFFFF;
+      color:#FEFEFE;
+      font-weight: 600;
+      border-radius: 20px;
+      width: 50px;
+    }
+    .error {
+      color: #FF0000;
+      font-style: italic;
+      padding-top: 5px;
+    }
+    a {
+	  color: #ff9966;
+	  padding-top: 15px;
+    }
+    a:hover {
+      color: #ff9966;	 
+    }
+	.login-box {
+      padding-top: 120px;     
+      max-width: 400px;
+      margin: 0 auto;
+    }
+	.login-box .form-control { 
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border-radius: 20px;
+      padding-right: 30px;
+    }
+	.hs {
+      color: #FEFEFE;
+      padding-top:30px;
+      text-align: center;
+      font-weight: 600;
+      padding-bottom:20px;
+    }
+    .form-inline label {
+	  margin: 5px 10px 15px 0;
+	}
+	
+	
+	</style>
+</head>
+
+
+<body>
+	<div class="login-box">
+		<h1 class="hs"> EDIT </h1>
+			<form class="form-inline">
+			    <label for="fname">First Name:</label>
+				<input size="28" type="text" id="fname" placeholder="First Name" class="form-control">	
+			    
+			    <label for="lname">Last Name:</label>
+				<input size="28" type="text" id="lname" placeholder="Last Name" class="form-control">
+				
+				<label for="email">Email:</label>
+				<input size="32" type="email" id="email" placeholder="Email" class="form-control">
+				
+				<label for="aff">Affiliation:</label>
+				<input size="29" type="text" id="aff" placeholder="Affiliation" class="form-control">
+			
+				<label for="dob">Birthday:</label>
+				<input style="width: 20em" type="date" id="dob" placeholder="Birthday" class="form-control">
+			
+				<label for="ints">Interests:</label>
+				<input style="width: 20em" type="text" id="ints" placeholder="Interests (separate them with commas)" class="form-control">
+				
+			<button onClick = "update()" class="btn btn-md btn-block btn-custom" type="submit" >UPDATE</button>		   
+			
+			</form>
+			<a href="/wall"><p style="padding-top:10px; text-align: center;">RETURN TO WALL</p></a>
+	</div>
+
+</body>
+</html>

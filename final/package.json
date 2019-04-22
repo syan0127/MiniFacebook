@@ -1,0 +1,19 @@
+{
+   "name": "PennBook",
+   "description": "NETS212 Final Project",
+   "version": "0.0.1",
+   "scripts": {
+      "start": "node app.js"
+   },
+   "dependencies": {
+      "express": "3.3.8",
+      "aws-sdk": "*",
+      "ejs": "*",
+      "async": "*",
+      "lru-cache": "*",
+      "crypto-js": "3.1.8",
+      "joi": "*",
+      "vogels": "*",
+      "socket.io": "*"
+   }
+}

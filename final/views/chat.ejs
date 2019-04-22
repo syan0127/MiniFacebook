@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>    
+    <title>Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">    
+
+    <style type="text/css">
+    body {
+      overflow: hidden;
+      width: 100wh;
+      height: 90vh;
+      color: #fff;
+      background-size: 110% 115%;
+      background-image: linear-gradient(to left bottom, #4c87fc, #5076fd, #5e62fb, #7148f4, #861de9);
+    }
+    .topnav {
+      background-color: transparent;
+      overflow: hidden;
+      padding: 5px;
+    }
+    
+    /* Style the links inside the navigation bar */
+    .topnav a {
+        float: left;
+        display: block;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .topnav a:hover {
+        border-bottom: 3px solid #fff;
+    }
+    
+    .topnav a.active {
+        border-bottom: 3px solid #fff;
+    }
+    
+    .topnav form{
+        position: absolute;
+        right: 10px;
+        transform: translate(0%, 5%);
+        transition: all 1s;
+        width: 50px;
+        height: 50px;
+        background: white;
+        box-sizing: border-box;
+        border-radius: 25px;
+        border: 4px solid white;
+        padding: 5px;
+    }
+    
+    .topnav input{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;;
+        height: 42.5px;
+        line-height: 30px;
+        outline: 0;
+        border: 0;
+        display: none;
+        font-size: 1em;
+        border-radius: 20px;
+        padding: 0 20px;
+    }
+    
+    .fa{
+        box-sizing: border-box;
+        padding: 10px;
+        width: 42.5px;
+        height: 42.5px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        border-radius: 50%;
+        color: #4c87fc;
+        text-align: center;
+        font-size: 1.2em;
+        transition: all 1s;
+    }
+    
+    .topnav form:hover{
+        width: 400px;
+        cursor: pointer;
+    }
+    
+    .topnav form:hover input{
+        display: block;
+    }
+    
+    .topnav form:hover .fa{
+        background: #4c87fc;
+        color: white;
+    }
+    
+    .nav_title {
+        float: left;
+        display: block;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 20px;
+        border-bottom: 3px solid transparent;
+    }
+    
+    
+    .post {
+        background: #DEE3E8;
+        border-radius: 10px;
+        padding: 10px;
+     }
+    .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:active,
+    .btn-primary:visited,
+    .btn-primary:focus {
+        background-color: #4c87fc;
+        border-color: #4c87fc;
+    }
+    
+    .post .inner {
+        background: #fff;
+        border-radius: 3px;
+        padding: 10px;
+     }
+     .hs {
+        color: #FEFEFE;
+        text-align: center;
+        font: italic bold 40px arial, sans-serif;
+     }
+     
+    .container {
+    display: grid;
+    grid-template-columns: 20% 80%;
+        grid-column-gap: 10px;
+        grid-row-gap: 5px;
+        width: 120%;
+    }
+     
+    .grid {
+      background-color: #fff;
+      color: #404040;
+      padding: 25px;
+      font-size: 1rem;
+      
+    }
+
+    .sidebar {
+      grid-column-start: 1;
+      grid-column-end: 2;
+      grid-row-start: 1;
+      grid-row-end: 4;
+      border-radius:10px;
+      position: relative;
+    }
+
+    .content {
+      grid-column-start: 2;
+      grid-column-end: 3;
+      grid-row-start: 1;
+      grid-row-end: 3;
+      border-radius:10px;
+      height: 75vh;
+      overflow:hidden;
+    }
+
+    .message_field {
+      grid-column-start: 2;
+      grid-column-end: 3;
+      grid-row-start: 3;
+      grid-row-end: 4;
+      padding: 15px;
+      border-radius:10px;
+      height: 10vh;
+    }
+
+    .message_other {
+      background-color: #f2f2f2;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      display: inline-block;
+    }
+
+    .message_mine {
+      background-color: #4c87fc;
+      color: #fefefe;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      text-align: right;
+      display: inline-block;
+    }
+
+    .chat_head {
+      background-color: #ffffff;
+      height: 40px;
+      width: 100%;
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .chat_dropdown {
+      position: absolute;
+      left: 0;
+      z-index: 2;
+      display: inline;
+    }
+
+    .chat_dropdown .btn {
+      background-color: #ffffff;
+    }
+
+    .select_name_field {
+      width: 100%;
+      display: none;
+    }
+
+    .name_pill {
+      margin-right: 5px;
+      font-size: 14px;
+    }
+
+    .list-group-item {
+      padding: 5px;
+      font-weight: normal;
+    }
+
+    .ta {
+      resize:none;
+      border-radius; 5px;
+      padding: 10px;
+      margin:1px;
+    }
+
+    </style>
+</head>
+
+<body>
+
+<!-- start global top navbar -->
+<div class="topnav">
+
+  <a href="/home">Home</a>
+  <a href="/wall">Wall</a>
+  <a href="/friendvisual">Friend Graph</a>
+  <a href="/chat" class="active">Chat</a>
+  <a href="/logout">Logout</a>
+
+  <form action="" method="" onSubmit="return false">
+    <input type="search" name="usernameInput" size="20" id="inputField" onKeyUp="updateOptions()">
+    <i class="fa fa-search"></i>
+  </form>
+    <div id="result"></div>
+</div>
+<!-- end global top navbar -->
+
+<div class="container">
+
+  <!-- start sidebar -->
+  <div class="grid sidebar">
+    <h5><b>Online Friends</b></h5> 
+    <div id="online_list" class="list-group list-group-flush">
+    </div> 
+    <hr style="border: 2px solid#5076fd;" />
+    <h5><b>Group Chat</b></h5> 
+    <ul id="channel_list" class="list-group list-group-flush">
+    </ul> 
+
+    <button class="btn btn-primary" id="new_chat" style="position: absolute; bottom: 0; width:77% ; margin-bottom: 25px;"> + New Chat </button>
+    
+  </div>
+  <!-- end sidebar -->
+
+  <!-- start chat messages field-->
+  <div class="grid content">
+    <div class="chat_head">
+      <h5 id="chatroom_title" style="text-align: center; width: 100%; position:absolute; margin-top:7px"> Some chat </h5>
+      <div class="dropdown chat_dropdown">
+        <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a class="dropdown-item" id="add_friend" href="#">Add friend</a>
+          <a class="dropdown-item" id="leave_channel" href="#">Leave channel</a>
+        </div>
+      </div>
+      <span id="selected_names" class="select_name_field" style="display: none;"></span>
+      <button id="create_chatroom" class="btn btn-primary" style="display: none; position: absolute; right: 0;">
+       Create </button>
+       <button id="add_chatroom" class="btn btn-primary" style="display: none; position: absolute; right: 0;">
+       Add </button>
+    </div>
+    <ul id="messages">
+    </ul>
+    <br>
+  </div>
+  <!-- end chat messages field -->
+
+  <!-- start message input field -->
+  <div class="grid message_field">
+    <form class="input-group form-group" id="chatbox">
+        <input type="text" class="form-control" id="tosend">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit" id="sendMessage">Send</button>
+        </span>
+    </form>
+  </div>
+  <!-- end message input field -->
+  
+</div>
+
+<script src="../socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  var username = '<%= username %>';
+  var userId = '<%= userId %>';
+  var socket = io(location.hostname + ':3000?username='+username+'&userId='+userId);
+  var currentChannelName = '';
+  update_chatroom_title('');
+  var currentChannelId = '';
+  var addingUsersToChat = false;
+  var currentChannelData = {};  // TODO is there a better way to do this??
+  console.log('My username:' + username);
+  console.log('My userId: ' + userId);
+  setInterval(function() {socket.emit('ping_active', {userId: userId})}, 10000);
+  setInterval(function() {socket.emit('online_check', {userId: userId})}, 15000);
+
+  socket.on('login', function(msg){
+    for (var i=0; i<msg.length; i++) {
+      if ($('#online_'+msg[i]).length == 0) {
+        console.log('append: ' + msg[i]);
+        $('#online_list').append(get_online_list_element(msg[i]));
+      }
+    }
+    
+    $('#online_list').find('a').each(function(index) {
+      var id = $(this).attr('id');
+      var username = id.substring(id.indexOf('_')+1, id.length);
+      console.log('user to check::' + username);
+      if (msg.indexOf(username) < 0) {
+        console.log('Removing offline user');
+        $(this).remove();
+      }
+    });
+    
+  });
+
+  // friend login/logout events
+  //socket.on('friend_login', function(msg) {
+  //  $('#online_list').append(get_online_list_element(msg.username));
+  //});
+
+  //socket.on('friend_logout', function(msg) {
+  //  console.log('trying to remove: ' + msg.username);
+  //  $('#online_'+msg.username).remove();
+  //});
+
+  // start a dm with a friend, OR add a friend when creating a new chat
+  $('#online_list').on('click', 'a', function(e) {
+    var other_user = this.text;
+    var channelId;
+
+    if (addingUsersToChat) {
+      $('#selected_names').append(get_name_pill_element(other_user));
+
+    } else {
+      if (username < other_user) {
+        channelId = username + '_' + other_user;
+      } else {
+        channelId = other_user + '_' + username;
+      }
+      currentChannelId = channelId;
+      console.log('currentChannelId set to: ' + currentChannelId);
+      socket.emit('join_channel', {channelId: channelId, member: other_user});
+    }
+  });
+
+  $('#channel_list').on('click', 'a', function(e) {
+    // ignore click if adding users to a new chat
+    if (addingUsersToChat) {
+      return false;
+    }
+    $(this).find('.unread_count').text('');
+
+    var idString = $(this).attr('id');
+    var selectedChannelId = idString.substring(idString.indexOf('_')+1, idString.length);
+    if (selectedChannelId === currentChannelId) {
+      return false;
+    }
+    currentChannelId = selectedChannelId;
+    console.log('requesting channel: ' + currentChannelId);
+    socket.emit('request_channel', {channelId: selectedChannelId});
+    if (currentChannelId.indexOf('_')> 0) {
+      console.log('selected channel is dm');
+      $('#leave_channel').addClass('disabled');
+    } else {
+      console.log('selected channel is group chats');
+      $('#leave_channel').removeClass('disabled');
+    }
+  });
+
+  // load and populate the messages
+  socket.on('get_channel', function(msg) {
+    console.log('received channel: ' + JSON.stringify(msg));
+    if ('channelId' in msg) {
+      currentChannelId = msg.channelId;
+      currentChannelData = msg;
+    }
+    if ($('#channel_'+currentChannelId).length == 0) {
+      // new channel has been created, add the entry to the list
+      console.log('Add new channel to channel list!');
+      $('#channel_list').append(get_channel_list_element(currentChannelId, msg.channelName));
+    }
+    currentChannelName = msg.channelName;
+    update_chatroom_title(currentChannelName);
+
+    
+  });
+
+  socket.on('get_messages', function(msg) {
+    // clear then populate the messages
+    if (msg.length == 0) {
+      return;
+    }
+    console.log('messages: ' + JSON.stringify(msg));
+    $('#messages').empty();
+    var messages = msg.Items;
+    for (var i=0; i<messages.length; i++) {
+      var user = messages[i].user;
+      var message = messages[i].message;
+      console.log('Adding message: ' + user + ' ; ' + message);
+
+      if (messages[i].user == username) {
+        $('#messages').append(get_message_mine_element(user, message));
+      } else {
+        $('#messages').append(get_message_other_element(user, message));
+      }
+    }
+  });
+
+  $('#new_chat').on('click', function(e) {
+    if ($(this).hasClass('disabled')) {
+      return false;
+    }
+    console.log('Creating a new chatroom');
+    addingUsersToChat = true;
+    $('#chatroom_title').hide();
+    $('#dropdownMenuButton').hide();
+    $('#selected_names').show();
+    $('#create_chatroom').show();
+  });
+
+  $('#selected_names').on('click', 'a', function(e) {
+    this.remove();
+  });
+
+  $('#create_chatroom').on('click', function(e) {
+    var invite_users = [];
+    $('#selected_names').children().each(function() {
+      invite_users.push(this.text);
+    });
+    $('#selected_names').empty();
+    $('#selected_names').hide();
+    $('#create_chatroom').hide();
+    addingUsersToChat = false;
+
+    currentChannelName = username;
+    for (var i=0; i<invite_users.length; i++) {
+      console.log('User to invite: ' + invite_users[i]);
+      currentChannelName += (', ' + invite_users[i]);
+      console.log(currentChannelName);
+    }
+    update_chatroom_title(currentChannelName);
+    $('#chatroom_title').show();
+    $('#dropdownMenuButton').show();
+
+    socket.emit('create_channel', {channelName: currentChannelName, members: invite_users});
+  });
+
+  // receive messages
+  // msg: {channelId, channelName, user, timestamp, message}
+  socket.on('message', function(msg){
+    console.log('Message received: ' + JSON.stringify(msg));
+    if (msg.user != username && msg.channelId === currentChannelId) {
+      $('#messages').append(get_message_other_element(msg.user, msg.message));
+    } else {
+      console.log('trying to alert user!');
+      if ($('#channel_'+msg.channelId).length == 0) {
+      //  $('#channel_list').append(get_channel_list_element(msg.channelId, msg.channelName));
+        socket.emit('request_channel_data', {channelId: msg.channelId});
+        console.log('requesting channel data!');
+        return;
+      }
+      var alertText = $('#channel_'+msg.channelId).find('.unread_count').text();
+      if (!alertText) alertText = '0';
+      var alerts = parseInt(alertText);
+      console.log('updating alertText of channel:' + msg.channel +' to: ' + alerts+1);
+      $('#channel_'+msg.channelId).find('.unread_count').text(alerts+1);
+    }
+  });
+
+  socket.on('get_channel_data', function(msg) {
+    if ($('#channel_'+msg.channelId).length == 0) {
+        $('#channel_list').append(get_channel_list_element(msg.channelId, msg.channelName));
+      }
+    var alertText = $('#channel_'+msg.channelId).find('.unread_count').text();
+    if (!alertText) alertText = '0';
+    var alerts = parseInt(alertText);
+    console.log('updating alertText of channel:' + msg.channel +' to: ' + alerts+1);
+    $('#channel_'+msg.channelId).find('.unread_count').text(alerts+1);
+  });
+
+  // send message
+  $('#chatbox').submit(function(e){
+    var message = $('#tosend').val();
+    console.log('Sending message: ' + message + 'to channel id: '+currentChannelId);
+    socket.emit('message', {channelId: currentChannelId, message: message});
+    $('#tosend').val('');
+    $('#messages').append(get_message_mine_element(username, message));
+    return false;
+  });
+
+  // leave a channel
+  $('#leave_channel').on('click', function(e) {
+    if ($(this).hasClass('disabled')) {
+      return false;
+    }
+    console.log('Leaving channel: ' + currentChannelName);
+    socket.emit('leave_channel', {channelId: currentChannelId});
+    console.log('removing entry: #channel_'+currentChannelId);
+    $('#channel_'+currentChannelId).remove();
+    currentChannelId = '';
+    currentChannelName = '';
+    update_chatroom_title('');
+    $('#messages').empty();
+    return false;
+  });
+
+  // add a friend to chat
+  $('#add_friend').on('click', function(e) {
+    if ($(this).hasClass('disabled')) {
+      return false;
+    }
+    console.log('Adding more friends to chat');
+    console.log('Current members: ' + currentChannelData.members);
+    $('#new_chat').addClass('disabled');
+    addingUsersToChat = true;
+    $('#chatroom_title').hide();
+    $('#dropdownMenuButton').hide();
+    $('#selected_names').show();
+    $('#add_chatroom').show();
+  });
+
+  $('#add_chatroom').on('click', function(e) {
+    var invite_users = [];
+    $('#selected_names').children().each(function() {
+      invite_users.push(this.text);
+    });
+    $('#selected_names').empty();
+    $('#selected_names').hide();
+    $('#add_chatroom').hide();
+    addingUsersToChat = false;
+
+    if (currentChannelId.indexOf('_') > 0) {
+      //dm; create new channel
+      invite_users = invite_users.concat(currentChannelData.members);
+      console.log('concatted users: ' + invite_users);
+      currentChannelName = invite_users[0];
+      
+      for (var i=1; i<invite_users.length; i++) {
+        console.log('User to invite: ' + invite_users[i]);
+        currentChannelName += (', ' + invite_users[i]);
+        console.log(currentChannelName);
+      }
+
+      update_chatroom_title(currentChannelName);
+      socket.emit('create_channel', {channelName: currentChannelName, members: invite_users});
+      $('#messages').empty();
+      
+    } else {
+      socket.emit('invite_user', {channelId: currentChannelId, members: invite_users});
+      currentChannelData.members.concat(invite_users);
+    }
+    $('#chatroom_title').show();
+    $('#dropdownMenuButton').show();
+  });
+
+
+// helper functions to generate elements to insert
+  function get_message_other_element(username, message) {
+    return '<li class="message_other">' + username + ': ' + message + '</li><br>';
+  }
+
+  function get_message_mine_element(username, message) {
+    return '<li class="message_mine">' + username + ': ' + message + '</li><br>';
+  }
+
+  function get_name_pill_element(name) {
+    return '<a href="#" class="badge badge-light name_pill" >' + name + '</a>';
+  }
+
+  function get_online_list_element(name) {
+    return '<a href="#" class="list-group-item list-group-item-action" id="online_' + name + '">' + name +'<span class="badge badge-primary"></span></a>';
+  }
+
+  function get_channel_list_element(channelId, channelName) {
+    return '<a href="#" class="list-group-item list-group-item-action" id="channel_' + channelId + '">' + channelName +'<span class="badge badge-primary unread_count"></span></a>';
+  }
+
+  function update_chatroom_title(title) {
+    console.log('updating chatroom title to: ' + title);
+    $('#chatroom_title').text(title);
+    if (!title) {
+      console.log('form should be disabled now');
+      $('#tosend').attr('disabled', 'disabled');
+      $('#sendMessage').attr('disabled', 'disabled');
+      $('#add_friend').addClass('disabled');
+      $('#leave_channel').addClass('disabled');
+    } else {
+      console.log('form should be enabled now');
+      $('#tosend').attr('disabled', null);
+      $('#sendMessage').attr('disabled', null);
+      $('#add_friend').removeClass('disabled');
+      //$('#leave_channel').removeClass('disabled');
+    }
+  }
+
+  
+</script>
+
+
+</body>
+</html>

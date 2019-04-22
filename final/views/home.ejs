@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+		
+  	<script type="text/javascript">
+  	
+  	var friendsArr = [];
+  	var loadedRec = false;
+  	var currentName;
+  	var statusArr = [];
+  	var currentUser;
+	var currentUserId;
+	var list = [];
+	let set = new Set();
+	function updateOptions() {
+    		
+		var term = document.getElementById('inputField').value;
+		if (term !== "") {
+			$.getJSON('/suggest/'+escape(term), function(elements) {
+				var htmlOut = '<ul class="list-group">\n';
+				for (var i = 0; i < elements.length; i++) {
+					if (elements[i].userId === currentUserId) {
+						continue;
+					}
+					var targetUser = elements[i].username;
+					var targetUserId = elements[i].userId;
+					htmlOut += '<li id=' + targetUserId + ' class="list-group-item" onclick="getPage(this.id)">' + elements[i].username + '</li>\n';			
+				}
+				htmlOut += "</ul>\n";
+				$("#result").html(htmlOut);
+			});
+		} else {
+			$("#result").hide();
+		
+		}
+		
+		$(document).hover(function(){
+		  $("#result").hide();
+		});
+		    		
+	}
+	
+	function showForm(){
+	    $("#result").show();
+	}
+	
+	function hideForm(){
+	    $("#result").hide();
+	}
+	
+	function compare(a,b) {
+      if (b.createdAt < a.createdAt)
+        return -1;
+      if (b.createdAt > a.createdAt)
+        return 1;
+      return 0;
+    }
+    
+    function addComment(idx) {
+    	var commentId = 'comment ' + idx;
+    	var content = document.getElementById(commentId);
+    	var time = new Date();	
+    	time = time.toString().substring(4,10) + ', ' + time.toString().substring(16, 21);
+    	
+    	console.log('add comment : ' + commentId + ', ' + content.value);
+    	var postId = list[idx].postId;
+    	var req = $.ajax({
+    		type: "POST",
+		    url: '/addcomment/:' + currentUserId,
+		    data: { postId: postId, content: content.value, userId: currentUserId, time: time},
+    	});
+    	
+    	
+    	var htmlOut = '<div class="inner" style="margin-top:10px;"><p style="font-size: 16px;"><span style="color: #787878; font-size: 13px"><i>' 
+    					+ time + '</i></span> <b> ' +currentName + '</b>: ' 
+    					+ content.value + '</p></div>';
+		var id = 'r' + idx;
+		//console.log('value: ' + htmlOut);
+		$('#' + id).append(htmlOut);
+		document.getElementById(commentId).value = "";
+    }
+
+
+	
+	
+  	function updateStatus() {
+		
+		var req = $.ajax({
+			type: "POST",
+		   	url: '/addstatus',
+		   	async: false,
+		   	data: {
+  						userId: currentUserId,
+  						content: document.getElementById("content").value 					
+  					}, 
+		   	success: function(data) { 
+		   		if(data == 'empty') {
+  					alert("Status cannot be empty!");
+  				} else {  					
+  					var d = new Date();			
+  					var postId = JSON.parse(data).postId;
+  					set.add(postId);
+  					var content = document.getElementById("content").value;
+  					//console.log('update status: ' + temp.postId);
+  					list.push({time: d, content: document.getElementById("content").value, userId: currentUserId, postId: postId});	
+  					addPost(currentName, d, document.getElementById("content").value);
+  					document.getElementById("content").value = ""; 					
+  					
+  					var updatedStatus = {
+  						postId: postId,
+  						userId: currentUserId,
+  						content: content
+  					}
+  					// when the update succeeds send the updated Status to currUser's friends
+					sendNotifications(updatedStatus);
+  					
+  				}   			
+		   }	   
+		});
+  	}
+  	
+  	function addPost(name, time, content) {
+  		var idx = list.length- 1;
+  		var time = time.toString().substring(4,10) + ', ' + time.toString().substring(16, 21);
+  		var commentId = 'comment ' + idx;
+  		var htmlOut = 
+  				
+			   '<div id="r'+ idx + '" class="post"> <div class="name"><p style="font-size: 18px;"><b>' + name + 
+			   '</b><span style="font-size: 13px"><i> '+ time +'</i></span></p></div><div class="inner">' + content + 
+			   '<div class="input-group" style="padding-top:10px;">' +
+			   '<input type="text" class="form-control" id="' + commentId + '" placeholder="Write a comment...">' +
+			   '<span class="input-group-btn">'+
+			   '<button class="btn btn-primary" type="button" onClick="addComment(' + idx + ')">Comment</button> </span> </div> </div> </div> <br>';
+		$('#target').prepend(htmlOut);
+  	}
+  	
+  	function updateFeed() {
+  		console.log('update feed : ' + list.length);  		
+  		list.sort(compare);
+		for(var i = list.length-1; i >= 0; i--) {
+			var name = 'temp';
+			var content = list[i].content;
+			var ts = new Date(list[i].time);
+			var creator = list[i].userId;
+			var time = ts.toString().substring(4,10) + ', ' + ts.toString().substring(16, 21);
+			var postId = list[i].postId;
+			if(set.has(postId)) continue;
+			set.add(postId);
+			$.ajax({
+			    url: '/getname/:' + creator,
+			    type: 'GET',
+			    dataType: 'json',
+			    cache: false,
+			    async: false,
+			    success: function(data){
+			      name = data.firstname + ' ' + data.lastname;
+			      
+			    }
+			  });
+			
+			var commentId = 'comment ' + i;
+			var htmlOut = 
+			   '<div id="r'+ i + '" class="post"> <div class="name"><p style="font-size: 18px;"><b>' + name + 
+			   '</b> <span style="font-size: 13px"><i>'+ time +'</i></span></p></div><div class="inner"><span style="white-space: pre-line">' + content + '</span>' +
+			   '<div class="input-group" style="padding-top:10px;">' +
+			   '<input type="text" class="form-control" id="' + commentId + '" placeholder="Write a comment...">' +
+			   '<span class="input-group-btn">'+
+			   '<button class="btn btn-primary" type="button" onClick="addComment(' + i + ')">Comment</button> </span> </div> </div> </div> <br>';
+			
+			
+			$('#target').append(htmlOut);
+			var comment = list[i].comment;
+			if(comment == undefined) continue;
+			//console.log('comment: ' + JSON.stringify(comment[0]));
+			for(var j = 0; j < comment.length; j++) {
+				var cont = comment[j].comment.content;
+				var user = comment[j].comment.userId;
+				var ctime = comment[j].comment.time;
+				var user_name = 'temp';
+				$.ajax({
+				    url: '/getname/:' + user,
+				    type: 'GET',
+				    dataType: 'json',
+				    cache: false,
+				    async: false,
+				    success: function(data2){
+				      user_name = data2.firstname + ' ' + data2.lastname;
+				      
+				    }
+				  });
+				
+				//console.log(user_name);
+				var htmlOut2 = '<div class="inner" style="margin-top:10px;"><p style="font-size: 16px;"><span style="color: #787878; font-size: 13px"><i>' 
+    					+ ctime + '</i></span> <b> ' + user_name + '</b>: ' 
+    					+ cont + '</p></div>';
+				var id = 'r' + i;
+				$('#' + id).append(htmlOut2);
+			}
+		}
+  	}
+  	
+  	function getFriends() {
+  		var req = $.getJSON('/friends/:' + currentUserId, function(data) {
+  			var array = data.Items;
+  			console.log('num friends : ' + array.length);
+  			
+  			for(var i = 0; i < array.length; i++) {
+  				var userId = array[i].friendId;
+  				//console.log('friend: ' + array[i].friendId);
+  				loadFStatuses(userId);				
+  			}
+  			
+  		});
+  	
+		req.success(function(response){
+			updateFeed();
+		});
+  	}
+  	
+  	function compare(a,b) {
+	  if (a.time < b.time)
+	    return -1;
+	  if (a.time > b.time)
+	    return 1;
+	  return 0;
+	}
+  	
+  	
+  	function loadFStatuses(userId) {
+  		console.log('/getstatuses/:' + userId + ' F');
+		
+		$.ajax({
+		    url: '/getstatuses/:' + userId,
+		    type: 'GET',
+		    dataType: 'json',
+		    async: false,
+		    success: function(data){
+		      	var array = data.Items;
+	  			console.log("loading my friends stat: " + array.length);
+	  			
+	  			for(var i = 0; i < array.length; i++) {
+	  				var time = array[i].createdAt;
+	  				var content = array[i].content;
+	  				var creator = array[i].userId;
+	  				var postId = array[i].postId;
+  					var comment = array[i].comment;
+	  				console.log('fstat:' + time + ', ' + content);
+	  				
+	  				var found = false;
+	  				for(var j = 0; j < list.length; j++) {
+	  					console.log(list[j].postId + ', ' +  postId);
+					    if (list[j].postId == postId) {
+					    	found = true;
+					        break;
+					    }
+					}
+					if(!found) {
+	  					list.push({time: time, content: content, userId: creator, postId: postId, comment: comment});
+					}
+	  			}
+	    }
+	  });
+		
+		
+  	}
+  	
+  	function loadStatuses() {
+  		console.log('/getstatuses/:' + currentUserId);
+  		var req = $.getJSON('/getstatuses/:' + currentUserId, function(data) {
+			var array = data.Items;  			
+  			for(var i = 0; i < array.length; i++) {
+  				var time = array[i].createdAt;
+  				var content = array[i].content;
+  				var creator = array[i].userId;
+  				var postId = array[i].postId;
+  				var comment = array[i].comment;
+  				//console.log('ls content:' + content);
+  				
+  				var found = false;
+  				for(var j = 0; j < list.length; j++) {
+  					console.log(list[j].postId + ', ' +  postId);
+				    if (list[j].postId == postId) {
+				    	found = true;
+				        break;
+				    }
+				}
+  				console.log('found:' + found);
+  				if(!found) {
+  					console.log('dont enter');
+	  				list.push({time: time, content: content, userId: creator, postId: postId, comment: comment});
+	  				var name = '';
+	  			}
+  			}
+  		});
+		req.success(function(response){
+			console.log("FRIEND LOADING DONE");
+			getFriends();
+		});
+  	}
+
+  	var setCurrUser = function() {
+    	var req = $.getJSON('/curruser', function(data) {
+        		currentUser = data.username;
+        		currentUserId = data.userId;
+        		//console.log('in json: ' + currentUserId);
+        })
+        
+        req.success(function(response){
+			loadStatuses();
+			setName();
+			// also load notification
+			loadNotifications();
+			// get recommended friends
+			if (!loadedRec) {
+				getRec();
+			}
+			getCurrFriends();
+		});
+    }
+    
+    
+    var setName = function() {
+    	
+    	$.ajax({
+		    url: '/getname/:' + currentUserId,
+		    type: 'GET',
+		    dataType: 'json',
+		    async: false,
+		    success: function(data){
+		      currentName = data.firstname + ' ' + data.lastname;
+		      console.log('set name : ' + currentName);
+	    }
+	  });
+    
+    }
+    
+
+
+    var getRec = function () {
+    	console.log("GETTING RECOMMENDATIONS");
+    	
+    	
+    	$.getJSON('/recs/:' + currentUserId, function(data) {
+    		$("#rec").empty();
+  			var htmlOut = '<ul">\n';
+			for (var i = 0; i < data.length; i++) {
+				if (friendsArr.includes(data[i].friendId)) {
+					continue;
+				}
+				var friendName = data[i].friendName;
+				var friendUsername = data[i].friendUsername;
+    			htmlOut += '<li>' + 'Full name: ' + friendName + ' Username: ' + friendUsername + '</li>\n';
+			}
+			htmlOut += "</ul>\n";
+			$("#rec").html(htmlOut);
+			loadedRec = true;
+  		});
+    }
+    
+    
+    window.onload = function() {
+  		setCurrUser();
+  	}
+
+	//window.setInterval(function(){
+	  /// call your function here
+	//}, 100000);
+	
+	var loadNotifications = function() {
+		$.getJSON('/notifications/' + currentUserId, function(data) {
+			
+			if (statusArr.length == 0) {
+				for (var i = 0; i < data.length; i++) {
+					statusArr.push(data[i]);
+				}
+			}
+			else {
+				for (var i = 0; i < data.length; i++) {
+					var exists = false;
+					for (var j = 0; j < statusArr.length; j++) {
+						if (data[i].postId == statusArr[j].postId) {
+							exists = true;
+							break;
+						}
+					}
+					if (!exists) {
+						statusArr.push(data[i]);
+					}
+				}
+			}
+						
+			var htmlOut = '<ul id="myList" class="list-group">\n';
+			for (var i = 0; i < statusArr.length; i++) {
+				var postId = statusArr[i].postId;
+				var author = statusArr[i].author;
+    			var content = statusArr[i].content;
+    			
+    			
+    			htmlOut += '<li id=' + postId + ' class="list-group-item" onclick="removeNotification(this.id)">' +
+    			 author 
+    			 + ' updated Status to ' +
+    			 content + '</li>\n';
+			}
+			htmlOut += "</ul>\n";
+			$("#noti_Dropdown").html(htmlOut);
+			$("#myList li").click(function (e) {
+				console.log(this.id);
+    			$(this).remove();
+    			for (var i = 0; i < statusArr.length; i++) {
+    				if (statusArr[i].postId == this.id) {
+    					console.log("DELETED FROM STATUSARR");
+    					statusArr.splice(i, 1);
+    				}
+    			}
+			});
+			
+			var count = statusArr.length;
+			$("#noti_Count").html(count);
+		}); 	
+	}
+	
+	var removeNotification = function(targetPostId) {
+		$.post("/deletePost", { userId: currentUserId, targetPostId: targetPostId }, function(result) {
+			console.log("DELETED " + result);			
+		});
+	}
+	
+	// For refreshing the page
+	var refreshTime = function() {
+    	loadNotifications();
+    	setTimeout(refreshTime, 3500);
+    };
+    $(document).ready(function() {
+    	setTimeout(refreshTime, 3500);
+    	setTimeout(refreshPosts, 5000);
+    });
+    
+    var refreshPosts = function() {
+    	setCurrUser();
+    	setTimeout(refreshPosts, 5000);
+    };
+    
+    var getPage = function (targetUserId) {
+    	
+		$("#add-friend").html("");
+		    		    		
+		var targetUsername = document.getElementById(targetUserId).innerHTML;
+		window.location.href = '/fwall/:' + targetUserId;
+	}	
+    
+    var sendNotifications = function(updatedStatus) {
+    	var friendIdArr = [];
+    	console.log(updatedStatus);
+    	var req = $.getJSON('/friends/:' + currentUserId, function(data) {
+  			for (var i = 0; i < data.Items.length; i++) {
+  				if (data.Items[i].status == 3) {
+  					friendIdArr.push(data.Items[i].friendId);
+  				}
+  			}
+  		});
+  		
+  		req.success(function(response){			
+			
+			$.post("/sendNotifications",
+    		 	{friendIdArr: friendIdArr, updatedStatus: updatedStatus},
+    		 	function (result) {
+    		 		if (result === 'Success') {
+    		 			console.log("Updated noti for everyone!");
+    		 		}
+    		 		else {
+    		 			alert(result);
+    		 		}
+    		 	});			
+		});    
+		
+	
+    }
+    
+    function getFriendReq() {
+    	/*var req = $.getJSON('/recs/:' + currentUserId, function(data) {
+			var array = data.Items;  			
+  			array = array[0].friends;
+  			console.log('getrec: ' + array);
+  			var htmlOut = '<ul">\n';
+			for (var i = 0; i < array.length; i++) {
+				var friend = array[i];
+    			htmlOut += '<li>' + friend + '</li>\n';
+			}
+			htmlOut += "</ul>\n";
+			$("#freq").html(htmlOut);
+			
+  		});
+		var id = "b1";
+		var htmlOut = '<button id="b1" class="btn btn-custom" type="button" style="margin-top:10px" onclick="acceptReq(this.id)">test1</button>'
+			          + '<button id="b2" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b3" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b4" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b5" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b6" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b7" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>'
+			          + '<button id="b8" class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq()">test2</button>';
+		$("#freq").html(htmlOut);*/
+    }
+    
+    function acceptReq(buttonId, targetUserId) {
+    	console.log('bid ' + buttonId.toString());
+    	buttonId = buttonId.toString();
+		var resetBottun = document.getElementById(buttonId);
+		var parentOfResetButton = resetBottun.parentElement;
+		parentOfResetButton.removeChild(resetBottun);
+		
+		$.post("/acceptfriend",
+    	{ userId: currentUserId, friendId: targetUserId },
+    	function (data) {
+    		//friendsArr.push(targetUserId);
+    		//setHeader(targetUserId);
+    	});
+    }
+    
+    
+    
+    var getCurrFriends = function() {
+    	console.log('cuid: ' + currentUserId);
+    	$.getJSON('/friends/'+escape(currentUserId), function(data) {
+    			console.log("CURRENT FRIENDS ARE " + data.Items.length);
+    			var tempFriendArr = [];
+    			for (var i = 0; i < data.Items.length; i++) {
+    				console.log(data.Items[i]);
+    				tempFriendArr.push(data.Items[i]);
+    			}
+    			var htmlOut = '';
+    			for (var i = 0; i < tempFriendArr.length; i++) {
+    				var f = tempFriendArr[i];
+    				var targetUserId = f.friendId;
+    				if (f.status == 3) {
+    					friendsArr.push(targetUserId);
+    				}
+    				console.log('fff: ' + targetUserId);
+    				var name = 'temp';
+    				if (f.status == 2) {
+    					$.ajax({
+						    url: '/getname/:' + targetUserId,
+						    type: 'GET',
+						    dataType: 'json',
+						    cache: false,
+						    async: false,
+						    success: function(data){
+						    	name = data.firstname + ' ' + data.lastname;
+						    }
+						});
+    				
+    					console.log('name: ' + name);
+    					htmlOut += '<button id="button"'+ i 
+    					+' class="btn btn-custom" type="button" style="margin-top:10px" onClick="acceptReq(this.id, \'' + targetUserId + '\')">'+name+'</button>';
+    				}
+    			}
+    			
+				$("#freq").html(htmlOut);
+    	});
+    }
+	
+  	</script>	
+	<style type="text/css">
+	body {
+		overflow: hidden;
+	  width: 100wh;
+	  height: 90vh;
+	  color: #fff;
+	  background-size: 110% 115%;
+	  background-image: linear-gradient(to left bottom, #4c87fc, #5076fd, #5e62fb, #7148f4, #861de9);
+	}
+	.topnav {
+	    background-color: transparent;
+	    overflow: hidden;
+	    padding: 5px;
+	}
+	
+	/* Style the links inside the navigation bar */
+	.topnav a {
+	    float: left;
+	    display: block;
+	    color: #f2f2f2;
+	    text-align: center;
+	    padding: 14px 16px;
+	    text-decoration: none;
+	    font-size: 17px;
+	    border-bottom: 3px solid transparent;
+	}
+	
+	.topnav a:hover {
+	    border-bottom: 3px solid #fff;
+	}
+	
+	.topnav a.active {
+	    border-bottom: 3px solid #fff;
+	}
+	
+	form{
+	    position: absolute;
+	    right: 10px;
+	    transform: translate(0%, 5%);
+	    transition: all 1s;
+	    width: 50px;
+	    height: 50px;
+	    background: white;
+	    box-sizing: border-box;
+	    border-radius: 25px;
+	    border: 4px solid white;
+	    padding: 5px;
+	    z-index: 9999;
+	    
+	}
+	
+	p {
+		display: inline;
+	}
+	
+	input{
+	    position: absolute;
+	    top: 0;
+	    left: 0;
+	    width: 100%;;
+	    height: 42.5px;
+	    line-height: 30px;
+	    outline: 0;
+	    border: 0;
+	    display: none;
+	    font-size: 1em;
+	    border-radius: 20px;
+	    padding: 0 20px;
+	}
+	
+	.fa-search{
+	    box-sizing: border-box;
+	    padding: 10px;
+	    width: 42.5px;
+	    height: 42.5px;
+	    position: absolute;
+	    top: 0;
+	    right: 0;
+	    border-radius: 50%;
+	    color: #4c87fc;
+	    text-align: center;
+	    font-size: 1.2em;
+	    transition: all 1s;
+	}
+	
+	form:hover{
+	    width: 400px;
+	    cursor: pointer;
+	}
+	
+	form:hover input{
+	    display: block;
+	}
+	
+	form:hover .fa-search{
+	    background: #4c87fc;
+	    color: white;
+	}
+	
+	.nav_title {
+	    float: left;
+	    display: block;
+	    color: #f2f2f2;
+	    text-align: center;
+	    padding: 14px 16px;
+	    text-decoration: none;
+	    font-size: 20px;
+	    border-bottom: 3px solid transparent;
+	}
+	
+	
+	.post {
+	 	background: #DEE3E8;
+	 	border-radius: 10px;
+	 	padding: 10px;
+	 }
+	.btn-primary,
+	.btn-primary:hover,
+	.btn-primary:active,
+	.btn-primary:visited,
+	.btn-primary:focus {
+	    background-color: #4c87fc;
+	    border-color: #4c87fc;
+	    display: block;
+	}
+	
+	.btn-custom {
+	    background-color: #4c87fc;
+	    display: block;
+	    width: 100%;
+	    color: #fff;
+	    height: 30px;
+	    line-height: 20px;
+	}
+	
+	.post .inner {
+	 	background: #fff;
+	 	border-radius: 3px;
+	 	padding: 10px;
+	 }
+	 
+	 
+	 .hs {
+      	color: #FEFEFE;
+      	text-align: center;
+      	font: italic bold 40px arial, sans-serif;
+     }
+     
+     .container {
+    display: grid;
+    grid-template-columns: 20% 80%;
+        grid-column-gap: 10px;
+        grid-row-gap: 5px;
+        width: 120%;
+}
+ 
+.grid {
+  background-color: #fff;
+  color: #404040;
+  padding: 25px;
+  font-size: 1rem;
+  
+}
+
+
+
+.sidebar {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 4;
+  border-radius:10px;
+}
+
+.content {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 1;
+  grid-row-end: 2;
+    border-radius:10px;
+    height: 25vh;
+  overflow:hidden;
+  background-color:#DEE3E8;
+}
+
+.extra {
+  
+  grid-column-start: 2;
+  grid-column-end: 3;
+  grid-row-start: 3;
+  grid-row-end: 4;
+  height: 60vh;
+  border-radius:10px;
+  overflow:auto;
+}
+ 
+ .ta {
+ 	resize:none;
+ 	border-radius; 5px;
+ 	padding: 10px;
+ 	margin:1px;
+ }
+
+.name {
+	color:#5e62fb;
+}
+ 
+ .topnav #noti_Contain {
+ 	float: left;
+	display: block;
+	color: #f2f2f2;
+	text-align: center;
+	padding: 14px 16px;
+	text-decoration: none;
+	font-size: 17px;
+	border-bottom: 3px solid transparent;
+ }
+ 
+ .topnav #noti_Count {
+ 	padding: 3px 7px 3px 7px;
+		background: #cc0000;
+		color: #ffffff;
+		font-weight: bold;
+		border-radius: 9px;
+		-moz-border-radius: 9px; 
+		-webkit-border-radius: 9px;
+		margin-top: -11px;
+		font-size: 11px;
+ }
+ 
+ .topnav #noti_Dropdown {
+	color:#4c87fc;
+	position: absolute;
+ 	height: 150px;
+  	overflow:auto;
+  	z-index: 99;
+  	font-size: 11px;
+  	display:none;
+ }
+ 
+ .topnav #noti_Contain:hover #noti_Dropdown {
+ 	color:#4c87fc;
+	position: absolute;
+ 	height: 150px;
+  	overflow:auto;
+  	z-index: 99;
+  	font-size: 11px; 	
+  	display:block;
+ }
+ .dropdown {
+		color:#4c87fc;
+  		display: inline-block;
+  		position: absolute;
+  		min-width: 0;
+  		width: 90%;
+  		margin-left: 10px;
+  		height: 150px;
+  		overflow:auto;
+  		padding-top:15px;
+  		z-index: 9999;
+	}
+	
+.box{
+    width: 100%;
+    height: 200px;
+    overflow: auto;
+}
+
+.btn-group button {
+  background-color: #4c87fc;
+  
+  display: block; /* Make the buttons appear below each other */
+  overflow: auto;
+}
+
+
+	</style>
+</head>
+
+
+<body>
+
+<div class="topnav">
+  <p class="nav_title"><b>PennBook</b> </p>
+  <div id="noti_Contain">
+    <span id="noti_Count"></span>
+  	<i class="fa fa-globe"></i>
+  	<div id="noti_Dropdown"></div>
+  </div>
+  <a class="active" href="/home">Home</a>
+  <a href="/wall">Wall</a>
+  <a href="/friendvisual">Friend Graph</a>
+  <a href="/chat">Chat</a>
+  <a href="/logout">Logout</a>
+
+  
+  <form action="" method="" onSubmit="return false" id="test" onmouseover="showForm();" onmouseout="hideForm();">
+  	<input type="search" name="usernameInput" size="20" id="inputField" onKeyUp="updateOptions()" autocomplete="off">
+  	<i class="fa fa-search"></i>
+  	<br>
+  	<div id="result" class="dropdown"></div>
+  </form>
+</div>
+
+<div class="container">
+  <div class="grid sidebar">
+ 	
+ 	<h5><b><i>You might also know...</i></b></h5> 
+  	<div class="box"><div id="rec"></div></div>
+	<hr style="border: 2px solid#5076fd;" />
+
+	<h5><b><i>Friend Requests</i></b></h5> 
+
+  	<div class="box"><div id="freq">
+			
+  	</div></div>
+  </div>
+  <div class="grid content">
+  			<div class="input-group">
+  			<textarea id="content" class="ta" name="Text1" cols="87" rows="4" placeholder="What's on your mind?"></textarea>
+			
+			</div>
+			<button class="btn btn-primary" type="button" style="margin-top:10px" onClick="updateStatus()">POST</button>
+  </div>
+  <div class="grid extra">
+  		<div id="target"></div>
+  		
+  </div>
+</div>
+
+
+
+</body>
+</html>
+

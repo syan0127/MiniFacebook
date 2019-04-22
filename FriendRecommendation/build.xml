@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="FriendRecommendation" default="jar" basedir=".">
+  <target name="javac" description="Compile java source to bytecode">
+    <mkdir dir="classes"/>
+    <javac srcdir="src" includes="**" encoding="utf-8" destdir="classes" target="1.8" nowarn="true"
+        debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <classpath>
+        <pathelement location="lib/hadoop-common-2.8.1.jar"/>
+        <pathelement location="lib/hadoop-mapreduce-client-core-2.8.1.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar" depends="javac" description="Create a jar file">
+    <zip destfile="FriendRecommendation.jar" basedir="classes"/>
+  </target>
+
+</project>

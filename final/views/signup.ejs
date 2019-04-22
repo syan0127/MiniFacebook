@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  	<script type="text/javascript">
+  	function checkCreateAccount() {
+  		var temp = 0;	
+		$.ajax({
+			type: "POST",
+		   	url: '/createacc',
+		   	async: false,
+		   	data: {	username: document.getElementById("uname").value,
+  					password: document.getElementById("psw").value	}, 
+		   	success: function(data) { 
+		   		if(data == 'error') {
+  					alert("Error signing in");
+  					temp = 1;
+  				} else if(data == 'exists') {
+  					alert("This username is already in use");
+  					temp = 1;
+  				} else if(data == 'empty') {
+  					alert("Empty fields");
+  					temp = 1;
+  				}  			
+		   }	   
+		});
+		
+		if(temp == 0) {
+  			console.log("signup success ");  				
+  			window.location.href = "/makeprofile";
+  		}
+  	}
+
+  	</script>
+  	
+	<title>Signup</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<style type="text/css">
+	body {
+	  width: 100wh;
+	  height: 90vh;
+	  color: #fff;
+	  background-size: 110% 115%;
+	  background-image: linear-gradient(to left bottom, #4c87fc, #5076fd, #5e62fb, #7148f4, #861de9);
+	}
+    .login-box {
+      padding-top: 220px;     
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    .login-box .form-control { 
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border-radius: 20px;
+      padding-right: 30px;
+    }
+    .btn-custom {
+      background-color: Transparent;
+      border-color: #FFFFFF;
+      color:#FEFEFE;
+      font-weight: 600;
+      border-radius: 20px;
+    }
+    .hs {
+      color: #FEFEFE;
+      text-align: center;
+      font-weight: 600;
+     }
+     .error {
+       color: #FF0000;
+       font-style: italic;
+       padding-top: 5px;
+     }
+     a {
+	  color: #ff9966;
+	 }
+	 a:hover {
+	    color: #ff9966;
+	 } 
+
+	</style>
+</head>
+
+
+<body>
+	<div class="login-box">
+		<h1 class="hs">PennBook</h1>
+			<p align="center" > Sign Up </p>
+		    <input type="text" placeholder="Username" id="uname" class="form-control">
+		    <input type="password" placeholder="Password" id="psw" class="form-control">
+		    <button onClick = "checkCreateAccount()" class="btn btn-md btn-block btn-custom" type="submit">SIGN UP</button>		   
+	</div>
+
+</body>
+</html>
